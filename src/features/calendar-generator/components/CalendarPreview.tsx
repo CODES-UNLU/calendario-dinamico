@@ -1,3 +1,4 @@
+import { AlertTriangle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { POSTER_DIMENSIONS } from '../../../shared/brand';
 import type { CalendarEvent, CalendarGrid } from '../domain/types';
@@ -11,6 +12,7 @@ interface CalendarPreviewProps {
 export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.45);
+  const [isOverflowing, setIsOverflowing] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -45,6 +47,19 @@ export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
         </span>
       </div>
 
+      {isOverflowing && (
+        <div
+          role="alert"
+          className="w-full max-w-[626px] mb-3 rounded-xl border border-[#ffd43b]/40 bg-[#ffd43b]/10 px-3.5 py-2.5 text-xs text-[#ffd43b] flex items-start gap-2.5"
+        >
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>
+            El contenido excede el alto disponible de una sola publicación. Reducí la cantidad de
+            acontecimientos o acortá los títulos para evitar recortes al exportar.
+          </span>
+        </div>
+      )}
+
       <div
         style={{ width: `${scaledWidth}px`, height: `${scaledHeight}px` }}
         className="relative overflow-hidden rounded-2xl border border-[#404040] shadow-2xl bg-[#022324]"
@@ -57,7 +72,11 @@ export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
             transformOrigin: 'top left',
           }}
         >
-          <CalendarPoster grid={grid} events={events} />
+          <CalendarPoster
+            grid={grid}
+            events={events}
+            onOverflowChange={setIsOverflowing}
+          />
         </div>
       </div>
     </div>
