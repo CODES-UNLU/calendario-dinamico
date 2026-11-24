@@ -1,4 +1,4 @@
-import { AlertTriangle, Download, Loader2 } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { POSTER_DIMENSIONS } from '../../../shared/brand';
 import { buildCalendarFilename, exportElementToPng } from '../../../shared/export/exportPng';
@@ -12,9 +12,10 @@ interface CalendarPreviewProps {
 
 export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const previewPosterWrapperRef = useRef<HTMLDivElement>(null);
   const exportNodeRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.45);
-  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [posterHeight, setPosterHeight] = useState<number>(POSTER_DIMENSIONS.height);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -39,16 +40,24 @@ export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
     }
   }, []);
 
+  useEffect(() => {
+    const wrapper = previewPosterWrapperRef.current;
+    if (!wrapper) return;
+    const nextHeight = Math.max(POSTER_DIMENSIONS.height, wrapper.scrollHeight);
+    setPosterHeight(nextHeight);
+  }, [events, grid]);
+
   const handleExport = async () => {
     if (!exportNodeRef.current || isExporting) return;
     setIsExporting(true);
     setExportError(null);
 
     try {
+      const exportHeight = Math.max(POSTER_DIMENSIONS.height, exportNodeRef.current.scrollHeight);
       const filename = buildCalendarFilename(grid.monthName, grid.year);
       await exportElementToPng(exportNodeRef.current, filename, {
         width: POSTER_DIMENSIONS.width,
-        height: POSTER_DIMENSIONS.height,
+        height: exportHeight,
       });
     } catch (err) {
       console.error('Error al exportar PNG:', err);
@@ -61,7 +70,7 @@ export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
   };
 
   const scaledWidth = Math.round(POSTER_DIMENSIONS.width * scale);
-  const scaledHeight = Math.round(POSTER_DIMENSIONS.height * scale);
+  const scaledHeight = Math.round(posterHeight * scale);
 
   return (
     <div ref={containerRef} className="w-full flex flex-col items-center">
@@ -69,7 +78,7 @@ export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
         <div className="text-xs text-[#b0b0b0]">
           <span className="font-medium text-white">Vista previa en tiempo real</span>
           <span className="ml-2 text-[#6c757d]">
-            {POSTER_DIMENSIONS.width} × {POSTER_DIMENSIONS.height} px (4:5)
+            {POSTER_DIMENSIONS.width} × {posterHeight} px
           </span>
         </div>
 
@@ -102,40 +111,24 @@ export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
         </div>
       )}
 
-      {isOverflowing && (
-        <div
-          role="alert"
-          className="w-full max-w-[626px] mb-3 rounded-xl border border-[#ffd43b]/40 bg-[#ffd43b]/10 px-3.5 py-2.5 text-xs text-[#ffd43b] flex items-start gap-2.5"
-        >
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>
-            El contenido excede el alto disponible de una sola publicación. Reducí la cantidad de
-            acontecimientos o acortá los títulos para evitar recortes al exportar.
-          </span>
-        </div>
-      )}
-
       <div
         style={{ width: `${scaledWidth}px`, height: `${scaledHeight}px` }}
         className="relative overflow-hidden rounded-2xl border border-[#404040] shadow-2xl bg-[#022324]"
       >
         <div
+          ref={previewPosterWrapperRef}
           style={{
             width: `${POSTER_DIMENSIONS.width}px`,
-            height: `${POSTER_DIMENSIONS.height}px`,
+            minHeight: `${POSTER_DIMENSIONS.height}px`,
             transform: `scale(${scale})`,
             transformOrigin: 'top left',
           }}
         >
-          <CalendarPoster
-            grid={grid}
-            events={events}
-            onOverflowChange={setIsOverflowing}
-          />
+          <CalendarPoster grid={grid} events={events} />
         </div>
       </div>
 
-      {/* Lienzo oculto a escala real (1080x1350) sin transformaciones CSS para exportación fiel */}
+      {/* Lienzo oculto a escala real sin transformaciones CSS para exportación fiel */}
       <div
         aria-hidden="true"
         style={{
@@ -143,7 +136,7 @@ export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
           left: '-99999px',
           top: 0,
           width: `${POSTER_DIMENSIONS.width}px`,
-          height: `${POSTER_DIMENSIONS.height}px`,
+          minHeight: `${POSTER_DIMENSIONS.height}px`,
           pointerEvents: 'none',
         }}
       >

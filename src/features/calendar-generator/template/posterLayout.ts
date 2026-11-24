@@ -1,4 +1,7 @@
+export type PosterEventsLayoutMode = 'list' | 'cards-2col';
+
 export interface PosterLayoutMetrics {
+  layoutMode: PosterEventsLayoutMode;
   monthFontSize: number;
   calendarBlockHeight: number;
   cellSize: number;
@@ -12,27 +15,24 @@ export interface PosterLayoutMetrics {
 }
 
 /**
- * Calcula métricas tipográficas y de espaciado para que:
- * 1. Las casillas del calendario sean siempre cuadradas (cellSize x cellSize).
- * 2. El nombre vertical del mes tenga exactamente la misma altura que todo el bloque de calendario.
- * 3. El listado cronológico se adapte a meses de 4, 5 o 6 filas y distinta densidad.
+ * Calcula métricas tipográficas y de espaciado para la pieza gráfica.
+ * - Hasta 6 acontecimientos: listado vertical clásico con separadores.
+ * - 7 o más acontecimientos: cambia automáticamente a grilla de tarjetas en 2 columnas.
  */
 export function computePosterLayoutMetrics(
   monthNameLength: number,
   weekCount: number,
   eventCount: number
 ): PosterLayoutMetrics {
+  const layoutMode: PosterEventsLayoutMode = eventCount >= 7 ? 'cards-2col' : 'list';
   const isSixWeeks = weekCount >= 6;
-  const isDenseEvents = eventCount >= 9;
-  const isMediumEvents = eventCount >= 6 && eventCount < 9;
+  const isDenseEvents = eventCount >= 10;
 
   let cellSize = 62;
   if (isSixWeeks && isDenseEvents) {
-    cellSize = 52;
+    cellSize = 54;
   } else if (isSixWeeks || isDenseEvents) {
-    cellSize = 56;
-  } else if (isMediumEvents) {
-    cellSize = 60;
+    cellSize = 58;
   }
 
   const gridGap = isSixWeeks || isDenseEvents ? 10 : 12;
@@ -41,25 +41,15 @@ export function computePosterLayoutMetrics(
   const calendarBlockHeight =
     weekdayHeight + weekdayMarginBottom + weekCount * cellSize + (weekCount - 1) * gridGap;
 
-  // Tamaño de fuente Handjet proporcional para que el texto cubra la altura del calendario sin distorsión
   const rawMonthFontSize = Math.round(calendarBlockHeight / Math.max(monthNameLength * 0.45, 2.5));
   const monthFontSize = Math.max(84, Math.min(132, rawMonthFontSize));
 
-  let eventTitleFontSize = 24;
-  let eventDateFontSize = 19;
-  let eventPaddingY = 12;
-
-  if (isDenseEvents) {
-    eventTitleFontSize = 20;
-    eventDateFontSize = 16;
-    eventPaddingY = 8;
-  } else if (isMediumEvents || isSixWeeks) {
-    eventTitleFontSize = 22;
-    eventDateFontSize = 18;
-    eventPaddingY = 10;
-  }
+  const eventTitleFontSize = layoutMode === 'cards-2col' ? 21 : 24;
+  const eventDateFontSize = layoutMode === 'cards-2col' ? 17 : 19;
+  const eventPaddingY = layoutMode === 'cards-2col' ? 14 : 12;
 
   return {
+    layoutMode,
     monthFontSize,
     calendarBlockHeight,
     cellSize,

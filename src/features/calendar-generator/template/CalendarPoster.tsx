@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import {
   CODES_BORDERS,
   CODES_LOGOS,
@@ -15,23 +14,14 @@ import { computePosterLayoutMetrics } from './posterLayout';
 interface CalendarPosterProps {
   grid: CalendarGrid;
   events: CalendarEvent[];
-  onOverflowChange?: (isOverflowing: boolean) => void;
 }
 
-export function CalendarPoster({ grid, events, onOverflowChange }: CalendarPosterProps) {
-  const listContainerRef = useRef<HTMLDivElement>(null);
+export function CalendarPoster({ grid, events }: CalendarPosterProps) {
   const metrics = computePosterLayoutMetrics(
     grid.monthName.length,
     grid.weeks.length,
     events.length
   );
-
-  useEffect(() => {
-    const el = listContainerRef.current;
-    if (!el || !onOverflowChange) return;
-    const isOverflowing = el.scrollHeight > el.clientHeight + 2;
-    onOverflowChange(isOverflowing);
-  }, [events, grid.weeks.length, metrics.eventPaddingY, onOverflowChange]);
 
   const gridWidth = 7 * metrics.cellSize + 6 * metrics.gridGap;
 
@@ -40,7 +30,7 @@ export function CalendarPoster({ grid, events, onOverflowChange }: CalendarPoste
       data-testid="calendar-poster"
       style={{
         width: `${POSTER_DIMENSIONS.width}px`,
-        height: `${POSTER_DIMENSIONS.height}px`,
+        minHeight: `${POSTER_DIMENSIONS.height}px`,
         background: `
           radial-gradient(circle at 18% 22%, rgba(93, 213, 216, 0.34) 0%, transparent 48%),
           radial-gradient(circle at 86% 78%, rgba(57, 192, 195, 0.28) 0%, transparent 52%),
@@ -48,7 +38,7 @@ export function CalendarPoster({ grid, events, onOverflowChange }: CalendarPoste
         `,
         fontFamily: POSTER_TYPOGRAPHY.body,
       }}
-      className="relative flex flex-col items-center justify-between px-[82px] pt-[70px] pb-[42px] select-none overflow-hidden"
+      className="relative flex flex-col items-center justify-between px-[82px] pt-[70px] pb-[42px] select-none"
     >
       {/* Contenedor central oscuro */}
       <div
@@ -57,7 +47,7 @@ export function CalendarPoster({ grid, events, onOverflowChange }: CalendarPoste
           boxShadow: '0 28px 65px rgba(0, 0, 0, 0.5)',
           border: '1px solid rgba(255, 255, 255, 0.06)',
         }}
-        className="w-full flex-1 min-h-0 rounded-[40px] px-[56px] pt-[48px] pb-[40px] flex flex-col overflow-hidden"
+        className="w-full flex-1 rounded-[40px] px-[56px] pt-[48px] pb-[44px] flex flex-col"
       >
         {/* Cabecera centrada: Mes vertical (misma altura que todo el calendario) + Grilla cuadrada */}
         <div className="flex items-start justify-center gap-[32px] shrink-0">
@@ -157,15 +147,45 @@ export function CalendarPoster({ grid, events, onOverflowChange }: CalendarPoste
           </div>
         </div>
 
-        {/* Listado cronológico de acontecimientos */}
-        <div
-          ref={listContainerRef}
-          className="mt-[28px] flex-1 min-h-0 flex flex-col justify-start overflow-hidden"
-        >
+        {/* Listado cronológico: 1 columna clásica o grilla de tarjetas en 2 columnas automáticamente */}
+        <div className="mt-[32px] flex-1 flex flex-col justify-start">
           {events.length === 0 ? (
             <p className="text-[24px] text-[#6c757d] text-center my-auto">
               Sin acontecimientos cargados para {grid.monthName.toLowerCase()} {grid.year}.
             </p>
+          ) : metrics.layoutMode === 'cards-2col' ? (
+            <div className="grid grid-cols-2 gap-[14px]">
+              {events.map((ev) => (
+                <div
+                  key={ev.id}
+                  style={{
+                    paddingTop: `${metrics.eventPaddingY}px`,
+                    paddingBottom: `${metrics.eventPaddingY}px`,
+                    border: `1px solid ${CODES_BORDERS.posterDivider}`,
+                  }}
+                  className="rounded-[16px] px-[20px] flex flex-col justify-center"
+                >
+                  <p
+                    style={{
+                      color: CODES_TEXT.posterEventTitle,
+                      fontSize: `${metrics.eventTitleFontSize}px`,
+                    }}
+                    className="font-semibold leading-snug break-words"
+                  >
+                    {ev.title}
+                  </p>
+                  <p
+                    style={{
+                      color: CODES_TEXT.posterEventDate,
+                      fontSize: `${metrics.eventDateFontSize}px`,
+                    }}
+                    className="font-normal mt-[3px]"
+                  >
+                    {formatEventDate(ev.date)}
+                  </p>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="flex flex-col">
               {events.map((ev, index) => (
