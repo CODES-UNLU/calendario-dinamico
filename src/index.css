@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+@import '@fontsource/handjet/500.css';
+@import '@fontsource/handjet/700.css';
+@import '@fontsource/poppins/400.css';
+@import '@fontsource/poppins/500.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource/poppins/700.css';
+@import '@fontsource/inconsolata/400.css';
+@import '@fontsource/inconsolata/600.css';
+
+:root {
+  --codes-primary: #39c0c3;
+  --codes-primary-dark: #2a8a8d;
+  --codes-primary-light: #5dd5d8;
+  --codes-bg-base: #0f0f0f;
+  --codes-bg-alt: #1a1a1a;
+  --codes-bg-card: #2d2d2d;
+  --codes-bg-elevated: #3a3a3a;
+  --codes-text-primary: #ffffff;
+  --codes-text-secondary: #e0e0e0;
+  --codes-text-light: #b0b0b0;
+  --codes-text-muted: #6c757d;
+  --codes-border: #404040;
+  --codes-border-light: #2d2d2d;
+  --codes-gradient: linear-gradient(135deg, #39c0c3 0%, #2a8a8d 100%);
+  --codes-gradient-light: linear-gradient(135deg, #5dd5d8 0%, #39c0c3 100%);
+}
