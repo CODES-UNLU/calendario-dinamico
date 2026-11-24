@@ -1,6 +1,7 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Download, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { POSTER_DIMENSIONS } from '../../../shared/brand';
+import { buildCalendarFilename, exportElementToPng } from '../../../shared/export/exportPng';
 import type { CalendarEvent, CalendarGrid } from '../domain/types';
 import { CalendarPoster } from '../template/CalendarPoster';
 
@@ -11,8 +12,11 @@ interface CalendarPreviewProps {
 
 export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const exportNodeRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.45);
   const [isOverflowing, setIsOverflowing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -35,17 +39,68 @@ export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
     }
   }, []);
 
+  const handleExport = async () => {
+    if (!exportNodeRef.current || isExporting) return;
+    setIsExporting(true);
+    setExportError(null);
+
+    try {
+      const filename = buildCalendarFilename(grid.monthName, grid.year);
+      await exportElementToPng(exportNodeRef.current, filename, {
+        width: POSTER_DIMENSIONS.width,
+        height: POSTER_DIMENSIONS.height,
+      });
+    } catch (err) {
+      console.error('Error al exportar PNG:', err);
+      setExportError(
+        'No se pudo generar la imagen PNG. Intentá nuevamente o verificá que no haya bloqueos de navegador.'
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const scaledWidth = Math.round(POSTER_DIMENSIONS.width * scale);
   const scaledHeight = Math.round(POSTER_DIMENSIONS.height * scale);
 
   return (
     <div ref={containerRef} className="w-full flex flex-col items-center">
-      <div className="flex items-center justify-between w-full max-w-[626px] mb-2 text-xs text-[#b0b0b0]">
-        <span>Vista previa en tiempo real</span>
-        <span>
-          {POSTER_DIMENSIONS.width} × {POSTER_DIMENSIONS.height} px (4:5)
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 w-full max-w-[626px] mb-3">
+        <div className="text-xs text-[#b0b0b0]">
+          <span className="font-medium text-white">Vista previa en tiempo real</span>
+          <span className="ml-2 text-[#6c757d]">
+            {POSTER_DIMENSIONS.width} × {POSTER_DIMENSIONS.height} px (4:5)
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={isExporting}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#39c0c3] px-4 py-2 text-xs sm:text-sm font-semibold text-[#0f0f0f] hover:bg-[#5dd5d8] disabled:opacity-60 disabled:cursor-not-allowed transition-colors cursor-pointer"
+        >
+          {isExporting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Exportando...
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              Descargar PNG
+            </>
+          )}
+        </button>
       </div>
+
+      {exportError && (
+        <div
+          role="alert"
+          className="w-full max-w-[626px] mb-3 rounded-xl border border-[#dc3545]/50 bg-[#dc3545]/10 px-3.5 py-2.5 text-xs text-[#ff6b6b]"
+        >
+          {exportError}
+        </div>
+      )}
 
       {isOverflowing && (
         <div
@@ -77,6 +132,23 @@ export function CalendarPreview({ grid, events }: CalendarPreviewProps) {
             events={events}
             onOverflowChange={setIsOverflowing}
           />
+        </div>
+      </div>
+
+      {/* Lienzo oculto a escala real (1080x1350) sin transformaciones CSS para exportación fiel */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          left: '-99999px',
+          top: 0,
+          width: `${POSTER_DIMENSIONS.width}px`,
+          height: `${POSTER_DIMENSIONS.height}px`,
+          pointerEvents: 'none',
+        }}
+      >
+        <div ref={exportNodeRef}>
+          <CalendarPoster grid={grid} events={events} />
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { formatDateISO, getDaysInMonth } from '../domain/calendarGrid';
+import { formatDateISO, getDaysInMonth, getMonthName } from '../domain/calendarGrid';
 import { EVENT_CATEGORIES, EVENT_CATEGORY_LIST } from '../domain/categories';
 import {
   validateEventInput,
@@ -16,6 +16,11 @@ interface EventFormProps {
   onCancelEdit: () => void;
 }
 
+function extractDayFromISO(dateStr: string): string {
+  const parts = dateStr.split('-');
+  return parts.length === 3 ? String(Number(parts[2])) : '1';
+}
+
 export function EventForm({
   year,
   month,
@@ -23,11 +28,11 @@ export function EventForm({
   onSubmit,
   onCancelEdit,
 }: EventFormProps) {
-  const defaultDate = formatDateISO(year, month, 1);
-  const maxDate = formatDateISO(year, month, getDaysInMonth(year, month));
+  const maxDays = getDaysInMonth(year, month);
+  const monthLabel = getMonthName(month).toLowerCase();
 
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState(defaultDate);
+  const [dayInput, setDayInput] = useState('1');
   const [category, setCategory] = useState<EventCategory>('paro-nodocente');
   const [useCustomColor, setUseCustomColor] = useState(false);
   const [customColor, setCustomColor] = useState(EVENT_CATEGORIES['paro-nodocente'].defaultColor);
@@ -36,7 +41,7 @@ export function EventForm({
   useEffect(() => {
     if (editingEvent) {
       setTitle(editingEvent.title);
-      setDate(editingEvent.date);
+      setDayInput(extractDayFromISO(editingEvent.date));
       setCategory(editingEvent.category);
       setUseCustomColor(Boolean(editingEvent.customColor));
       setCustomColor(
@@ -45,7 +50,7 @@ export function EventForm({
       setErrors({});
     } else {
       setTitle('');
-      setDate(formatDateISO(year, month, 1));
+      setDayInput('1');
       setUseCustomColor(false);
       setErrors({});
     }
@@ -53,9 +58,19 @@ export function EventForm({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    const parsedDay = Number(dayInput);
+
+    if (!Number.isInteger(parsedDay) || parsedDay < 1 || parsedDay > maxDays) {
+      setErrors({
+        title: !title.trim() ? 'El título es obligatorio.' : undefined,
+        date: `Ingresá un día válido entre 1 y ${maxDays} para ${monthLabel}.`,
+      });
+      return;
+    }
+
     const input: EventFormInput = {
       title,
-      date,
+      date: formatDateISO(year, month, parsedDay),
       category,
       customColor: useCustomColor ? customColor : undefined,
     };
@@ -105,16 +120,17 @@ export function EventForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label htmlFor="event-date" className="block text-xs text-[#b0b0b0] mb-1">
-              Fecha *
+            <label htmlFor="event-day" className="block text-xs text-[#b0b0b0] mb-1">
+              Día * <span className="text-[#6c757d]">(1–{maxDays} de {monthLabel})</span>
             </label>
             <input
-              id="event-date"
-              type="date"
-              min={defaultDate}
-              max={maxDate}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              id="event-day"
+              type="number"
+              min={1}
+              max={maxDays}
+              step={1}
+              value={dayInput}
+              onChange={(e) => setDayInput(e.target.value)}
               className="w-full rounded-lg border border-[#404040] bg-[#2d2d2d] px-3 py-2 text-sm text-white focus:border-[#39c0c3] focus:outline-none"
             />
             {errors.date && (
