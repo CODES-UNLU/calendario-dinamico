@@ -3,12 +3,17 @@ export interface ColorPreset {
   hex: string;
 }
 
-export const DEFAULT_EVENT_COLOR = '#28a745';
-
-export const EVENT_COLOR_PRESETS: ColorPreset[] = [
-  { label: 'Verde medio', hex: '#28a745' },
-  { label: 'Verde claro', hex: '#4cc764' },
-  { label: 'Verde oscuro', hex: '#1b5e34' },
-  { label: 'Turquesa CODES', hex: '#39c0c3' },
-  { label: 'Azul', hex: '#4e6f9e' },
+/**
+ * Escala oficial de verdes del gráfico de contribuciones de GitHub (modo oscuro),
+ * ordenada de menor a mayor intensidad.
+ */
+export const GITHUB_CONTRIBUTION_GREENS: ColorPreset[] = [
+  { label: 'Nivel 1 (verde oscuro)', hex: '#0e4429' },
+  { label: 'Nivel 2 (verde medio)', hex: '#006d32' },
+  { label: 'Nivel 3 (verde brillante)', hex: '#26a641' },
+  { label: 'Nivel 4 (verde intenso)', hex: '#39d353' },
 ];
+
+export const DEFAULT_EVENT_COLOR = '#26a641';
+
+export const EVENT_COLOR_PRESETS = GITHUB_CONTRIBUTION_GREENS;
