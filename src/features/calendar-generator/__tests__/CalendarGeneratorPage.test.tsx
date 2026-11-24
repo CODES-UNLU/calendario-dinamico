@@ -1,9 +1,13 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { CalendarGeneratorPage } from '../components/CalendarGeneratorPage';
 
 describe('CalendarGeneratorPage', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('actualiza la vista previa al cambiar de mes y año', async () => {
     const user = userEvent.setup();
     render(<CalendarGeneratorPage />);
@@ -42,6 +46,22 @@ describe('CalendarGeneratorPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Eliminar Asueto académico' }));
     expect(within(poster).queryByText('Asueto académico')).not.toBeInTheDocument();
+  });
+
+  it('persiste los borradores por mes en localStorage al recargar', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<CalendarGeneratorPage />);
+
+    await user.selectOptions(screen.getByLabelText('Mes'), '11');
+    await user.selectOptions(screen.getByLabelText('Año'), '2026');
+    await user.type(screen.getByLabelText('Título *'), 'Asamblea CODES');
+    await user.click(screen.getByRole('button', { name: 'Agregar acontecimiento' }));
+
+    unmount();
+    render(<CalendarGeneratorPage />);
+
+    const poster = screen.getAllByTestId('calendar-poster')[0];
+    expect(within(poster).getByText('Asamblea CODES')).toBeInTheDocument();
   });
 
   it('carga los datos de ejemplo y muestra el aviso de modo ejemplo', async () => {
