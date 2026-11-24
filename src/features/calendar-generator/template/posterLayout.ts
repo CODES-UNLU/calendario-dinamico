@@ -1,7 +1,9 @@
 export interface PosterLayoutMetrics {
   monthFontSize: number;
-  cellHeight: number;
+  calendarBlockHeight: number;
+  cellSize: number;
   cellFontSize: number;
+  weekdayHeight: number;
   weekdayFontSize: number;
   gridGap: number;
   eventTitleFontSize: number;
@@ -10,9 +12,10 @@ export interface PosterLayoutMetrics {
 }
 
 /**
- * Calcula métricas tipográficas y de espaciado para que la pieza de 1080×1350
- * se adapte a meses de 4, 5 o 6 filas, nombres de mes de distinta longitud
- * y distinta densidad de acontecimientos sin perder legibilidad.
+ * Calcula métricas tipográficas y de espaciado para que:
+ * 1. Las casillas del calendario sean siempre cuadradas (cellSize x cellSize).
+ * 2. El nombre vertical del mes tenga exactamente la misma altura que todo el bloque de calendario.
+ * 3. El listado cronológico se adapte a meses de 4, 5 o 6 filas y distinta densidad.
  */
 export function computePosterLayoutMetrics(
   monthNameLength: number,
@@ -23,24 +26,25 @@ export function computePosterLayoutMetrics(
   const isDenseEvents = eventCount >= 9;
   const isMediumEvents = eventCount >= 6 && eventCount < 9;
 
-  // Altura de celda adaptativa según semanas y densidad de eventos
-  let cellHeight = 68;
+  let cellSize = 62;
   if (isSixWeeks && isDenseEvents) {
-    cellHeight = 52;
+    cellSize = 52;
   } else if (isSixWeeks || isDenseEvents) {
-    cellHeight = 58;
+    cellSize = 56;
   } else if (isMediumEvents) {
-    cellHeight = 62;
+    cellSize = 60;
   }
 
   const gridGap = isSixWeeks || isDenseEvents ? 10 : 12;
-  const totalGridHeight = weekCount * cellHeight + (weekCount - 1) * gridGap + 36;
+  const weekdayHeight = 28;
+  const weekdayMarginBottom = 10;
+  const calendarBlockHeight =
+    weekdayHeight + weekdayMarginBottom + weekCount * cellSize + (weekCount - 1) * gridGap;
 
-  // Ajustar el tamaño del mes vertical (Handjet) para que no desborde la altura de la grilla
-  const baseMonthSize = Math.round((totalGridHeight / Math.max(monthNameLength * 0.56, 3.6)) * 0.95);
-  const monthFontSize = Math.max(76, Math.min(124, baseMonthSize));
+  // Tamaño de fuente Handjet proporcional para que el texto cubra la altura del calendario sin distorsión
+  const rawMonthFontSize = Math.round(calendarBlockHeight / Math.max(monthNameLength * 0.45, 2.5));
+  const monthFontSize = Math.max(84, Math.min(132, rawMonthFontSize));
 
-  // Tipografía del listado cronológico (Poppins) con piso legible
   let eventTitleFontSize = 24;
   let eventDateFontSize = 19;
   let eventPaddingY = 12;
@@ -57,8 +61,10 @@ export function computePosterLayoutMetrics(
 
   return {
     monthFontSize,
-    cellHeight,
-    cellFontSize: cellHeight <= 54 ? 27 : 31,
+    calendarBlockHeight,
+    cellSize,
+    cellFontSize: cellSize <= 54 ? 26 : 30,
+    weekdayHeight,
     weekdayFontSize: 22,
     gridGap,
     eventTitleFontSize,

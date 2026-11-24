@@ -31,7 +31,6 @@ describe('calendarGrid domain logic', () => {
   });
 
   it('genera un mes de 6 filas cuando corresponde (Agosto 2026)', () => {
-    // 1 de agosto de 2026 es sábado (índice 5 en semana lunes-domingo), 31 días -> 6 filas
     const grid = generateCalendarGrid(2026, 8);
     expect(grid.weeks).toHaveLength(6);
     expect(grid.weeks[0].slice(0, 5).every((c) => c.day === null)).toBe(true);
@@ -49,8 +48,8 @@ describe('calendarGrid domain logic', () => {
 
   it('asocia múltiples acontecimientos a una misma fecha en la grilla', () => {
     const events: CalendarEvent[] = [
-      { id: '1', title: 'Feriado', date: '2026-11-09', category: 'feriado' },
-      { id: '2', title: 'Charla', date: '2026-11-09', category: 'charla-evento' },
+      { id: '1', title: 'Feriado', date: '2026-11-09', color: '#1b5e34' },
+      { id: '2', title: 'Charla', date: '2026-11-09', color: '#1b5e34' },
     ];
     const grid = generateCalendarGrid(2026, 11, events);
     const allCells = grid.weeks.flat();

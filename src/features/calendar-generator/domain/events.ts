@@ -1,17 +1,16 @@
 import { getDaysInMonth } from './calendarGrid';
-import type { CalendarEvent, EventCategory } from './types';
+import type { CalendarEvent } from './types';
 
 export interface EventFormInput {
   title: string;
   date: string;
-  category: EventCategory;
-  customColor?: string;
+  color: string;
 }
 
 export interface EventValidationErrors {
   title?: string;
   date?: string;
-  customColor?: string;
+  color?: string;
 }
 
 export function sortEvents(events: CalendarEvent[]): CalendarEvent[] {
@@ -57,8 +56,8 @@ export function validateEventInput(
     }
   }
 
-  if (input.customColor && !/^#[0-9a-fA-F]{6}$/.test(input.customColor)) {
-    errors.customColor = 'El color debe tener formato hexadecimal (#RRGGBB).';
+  if (!/^#[0-9a-fA-F]{6}$/.test(input.color)) {
+    errors.color = 'El color debe tener formato hexadecimal (#RRGGBB).';
   }
 
   return errors;
@@ -72,4 +71,3 @@ export function filterEventsForMonth(
   const prefix = `${year}-${String(month).padStart(2, '0')}-`;
   return sortEvents(events.filter((ev) => ev.date.startsWith(prefix)));
 }
-

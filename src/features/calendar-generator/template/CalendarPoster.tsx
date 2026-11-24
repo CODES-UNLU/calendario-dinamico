@@ -9,7 +9,6 @@ import {
   POSTER_TYPOGRAPHY,
 } from '../../../shared/brand';
 import { formatEventDate, WEEKDAY_LABELS } from '../domain/calendarGrid';
-import { getEventColor } from '../domain/categories';
 import type { CalendarEvent, CalendarGrid } from '../domain/types';
 import { computePosterLayoutMetrics } from './posterLayout';
 
@@ -33,6 +32,8 @@ export function CalendarPoster({ grid, events, onOverflowChange }: CalendarPoste
     const isOverflowing = el.scrollHeight > el.clientHeight + 2;
     onOverflowChange(isOverflowing);
   }, [events, grid.weeks.length, metrics.eventPaddingY, onOverflowChange]);
+
+  const gridWidth = 7 * metrics.cellSize + 6 * metrics.gridGap;
 
   return (
     <div
@@ -58,42 +59,53 @@ export function CalendarPoster({ grid, events, onOverflowChange }: CalendarPoste
         }}
         className="w-full flex-1 min-h-0 rounded-[40px] px-[56px] pt-[48px] pb-[40px] flex flex-col overflow-hidden"
       >
-        {/* Cabecera: Mes vertical + Grilla de calendario */}
-        <div className="flex items-stretch gap-[34px] shrink-0">
-          <div className="flex items-center justify-center shrink-0 pt-[30px]">
-            <span
+        {/* Cabecera centrada: Mes vertical (misma altura que todo el calendario) + Grilla cuadrada */}
+        <div className="flex items-start justify-center gap-[32px] shrink-0">
+          <svg
+            width="104"
+            height={metrics.calendarBlockHeight}
+            viewBox={`0 0 104 ${metrics.calendarBlockHeight}`}
+            aria-hidden="true"
+            className="shrink-0 overflow-visible"
+          >
+            <text
+              x={-metrics.calendarBlockHeight / 2}
+              y={54}
+              transform="rotate(-90)"
+              textAnchor="middle"
+              dominantBaseline="central"
+              textLength={metrics.calendarBlockHeight}
+              lengthAdjust="spacing"
+              fill="#ffffff"
               style={{
                 fontFamily: POSTER_TYPOGRAPHY.monthDisplay,
                 fontSize: `${metrics.monthFontSize}px`,
-                writingMode: 'vertical-rl',
-                transform: 'rotate(180deg)',
-                letterSpacing: '0.05em',
-                lineHeight: 0.85,
+                fontWeight: 700,
               }}
-              className="font-bold uppercase text-white"
             >
-              {grid.monthName}
-            </span>
-          </div>
+              {grid.monthName.toUpperCase()}
+            </text>
+          </svg>
+          <span className="sr-only">{grid.monthName}</span>
 
-          <div className="flex-1">
+          <div style={{ width: `${gridWidth}px` }} className="shrink-0">
             {/* Encabezados de días L M M J V S D */}
             <div
-              style={{ gap: `${metrics.gridGap}px` }}
-              className="grid grid-cols-7 mb-[10px]"
+              style={{ gap: `${metrics.gridGap}px`, height: `${metrics.weekdayHeight}px` }}
+              className="grid grid-cols-7 items-center mb-[10px]"
             >
               {WEEKDAY_LABELS.map((label, idx) => (
                 <div
                   key={`${label}-${idx}`}
                   style={{ fontSize: `${metrics.weekdayFontSize}px` }}
-                  className="text-center font-medium text-white/95"
+                  className="text-center font-medium text-white/95 leading-none"
                 >
                   {label}
                 </div>
               ))}
             </div>
 
-            {/* Semanas */}
+            {/* Semanas con casillas cuadradas */}
             <div style={{ gap: `${metrics.gridGap}px` }} className="flex flex-col">
               {grid.weeks.map((week, wIdx) => (
                 <div
@@ -106,21 +118,23 @@ export function CalendarPoster({ grid, events, onOverflowChange }: CalendarPoste
                       return (
                         <div
                           key={`empty-${wIdx}-${cIdx}`}
-                          style={{ height: `${metrics.cellHeight}px` }}
+                          style={{
+                            width: `${metrics.cellSize}px`,
+                            height: `${metrics.cellSize}px`,
+                          }}
                         />
                       );
                     }
 
                     const primaryEvent = cell.events[0];
-                    const bgColor = primaryEvent
-                      ? getEventColor(primaryEvent.category, primaryEvent.customColor)
-                      : CODES_SURFACES.posterCell;
+                    const bgColor = primaryEvent ? primaryEvent.color : CODES_SURFACES.posterCell;
 
                     return (
                       <div
                         key={cell.dateStr}
                         style={{
-                          height: `${metrics.cellHeight}px`,
+                          width: `${metrics.cellSize}px`,
+                          height: `${metrics.cellSize}px`,
                           backgroundColor: bgColor,
                           fontFamily: POSTER_TYPOGRAPHY.calendarNumbers,
                           fontSize: `${metrics.cellFontSize}px`,
@@ -130,7 +144,7 @@ export function CalendarPoster({ grid, events, onOverflowChange }: CalendarPoste
                         <span>{cell.day}</span>
                         {cell.events.length > 1 && (
                           <span
-                            className="absolute bottom-[5px] right-[7px] h-[7px] w-[7px] rounded-full bg-white/90"
+                            className="absolute bottom-[5px] right-[6px] h-[6px] w-[6px] rounded-full bg-white/90"
                             aria-hidden="true"
                           />
                         )}

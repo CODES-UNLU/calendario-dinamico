@@ -1,27 +1,10 @@
-export type EventCategory =
-  | 'feriado'
-  | 'asueto'
-  | 'paro-docente'
-  | 'paro-nodocente'
-  | 'institucional'
-  | 'charla-evento'
-  | 'fecha-academica'
-  | 'otro';
-
-export interface CategoryMeta {
-  id: EventCategory;
-  label: string;
-  defaultColor: string;
-}
-
 export interface CalendarEvent {
   id: string;
   title: string;
   /** Fecha en formato ISO local YYYY-MM-DD */
   date: string;
-  category: EventCategory;
-  /** Color hexadecimal opcional para sobrescribir el color de la categoría */
-  customColor?: string;
+  /** Color hexadecimal (#RRGGBB) para destacar la casilla en la grilla */
+  color: string;
 }
 
 export interface CalendarConfig {
@@ -44,4 +27,3 @@ export interface CalendarGrid {
   monthName: string;
   weeks: CalendarCell[][];
 }
-

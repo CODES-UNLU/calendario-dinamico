@@ -48,8 +48,7 @@ export function useCalendarGenerator(initialConfig?: CalendarConfig) {
       id: createEventId(),
       title: input.title.trim(),
       date: input.date,
-      category: input.category,
-      customColor: input.customColor || undefined,
+      color: input.color,
     };
     setEvents((prev) => sortEvents([...prev, newEvent]));
     setIsSampleData(false);
@@ -64,8 +63,7 @@ export function useCalendarGenerator(initialConfig?: CalendarConfig) {
                 ...ev,
                 title: input.title.trim(),
                 date: input.date,
-                category: input.category,
-                customColor: input.customColor || undefined,
+                color: input.color,
               }
             : ev
         )

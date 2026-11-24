@@ -1,6 +1,5 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { formatEventDate } from '../domain/calendarGrid';
-import { EVENT_CATEGORIES, getEventColor } from '../domain/categories';
 import type { CalendarEvent } from '../domain/types';
 
 interface EventListProps {
@@ -29,7 +28,6 @@ export function EventList({ events, editingEventId, onEdit, onDelete }: EventLis
       ) : (
         <ul className="divide-y divide-[#2d2d2d]">
           {events.map((ev) => {
-            const color = getEventColor(ev.category, ev.customColor);
             const isEditing = ev.id === editingEventId;
 
             return (
@@ -42,14 +40,12 @@ export function EventList({ events, editingEventId, onEdit, onDelete }: EventLis
                 <div className="flex items-start gap-2.5 min-w-0">
                   <span
                     className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: color }}
+                    style={{ backgroundColor: ev.color }}
                     aria-hidden="true"
                   />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-white break-words">{ev.title}</p>
-                    <p className="text-xs text-[#b0b0b0]">
-                      {formatEventDate(ev.date)} · {EVENT_CATEGORIES[ev.category].label}
-                    </p>
+                    <p className="text-xs text-[#b0b0b0]">{formatEventDate(ev.date)}</p>
                   </div>
                 </div>
 
